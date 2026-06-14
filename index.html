@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لعبة المحقق الذكي</title>
+<title>🕵️ لعبة المحقق الاحترافية</title>
 
 <style>
 body{
-    font-family: Arial;
     margin:0;
+    font-family:Arial;
     background:#0f172a;
     color:white;
     text-align:center;
@@ -24,12 +24,11 @@ header{
     background:#1f2937;
     margin:10px auto;
     padding:15px;
-    max-width:600px;
+    max-width:700px;
     border-radius:12px;
 }
 
 button{
-    width:90%;
     padding:10px;
     margin:5px;
     border:none;
@@ -37,17 +36,15 @@ button{
     cursor:pointer;
     background:#2563eb;
     color:white;
-    font-size:16px;
+    width:90%;
 }
 
-button:hover{
-    background:#1d4ed8;
-}
+button:hover{background:#1d4ed8;}
 
 .suspect{
     background:#334155;
+    margin:6px;
     padding:10px;
-    margin:8px 0;
     border-radius:8px;
     cursor:pointer;
 }
@@ -56,16 +53,30 @@ button:hover{
     border:2px solid #22c55e;
 }
 
-.result{
-    font-size:20px;
-    margin-top:10px;
+.badge{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:6px;
+    background:#374151;
+    margin:3px;
+}
+
+#timer{
+    font-size:22px;
+    color:#f59e0b;
 }
 </style>
 </head>
 
 <body>
 
-<header>🕵️ لعبة المحقق الذكي</header>
+<header>🕵️ لعبة المحقق الاحترافية</header>
+
+<div class="card">
+<h3>📍 القضية رقم: <span id="level">1</span></h3>
+<div id="timer"></div>
+<div>النقاط: <span id="score">0</span> | الرتبة: <span id="rank">مبتدئ</span></div>
+</div>
 
 <div class="card">
 <h3>📍 مكان الجريمة</h3>
@@ -73,99 +84,185 @@ button:hover{
 </div>
 
 <div class="card">
-<h3>📋 الأدلة</h3>
-<p id="evidence"></p>
-<button onclick="showEvidence()">عرض الأدلة</button>
+<h3>👤 الشاهد</h3>
+<p id="witness"></p>
 </div>
 
 <div class="card">
-<h3>👥 المشتبه بهم</h3>
+<h3>📋 التقرير الجنائي</h3>
+<button onclick="showEvidence()">عرض التقرير</button>
+<p id="evidence"></p>
+</div>
+
+<div class="card">
+<h3>🧠 اسأل المشتبهين</h3>
+<div id="questions"></div>
+</div>
+
+<div class="card">
+<h3>👥 المشتبهين</h3>
 <div id="suspects"></div>
 </div>
 
 <div class="card">
 <button onclick="finalAnswer()">⚖️ إصدار الحكم</button>
+<button onclick="hint()">💡 تلميح</button>
 </div>
 
 <div class="card">
-<div class="result" id="result"></div>
+<p id="result"></p>
 </div>
 
 <script>
-// بيانات اللعبة
+
 const names = ["سلطان","تركي","مشاري","فيصل","خالد","نواف"];
+const places = ["القصر","المتحف","البورصة","المختبر"];
 
 const blood = ["O+","A+","B+","AB+"];
 const perfumes = ["عود","مسك","لافندر","صندل"];
 const devices = ["Windows","Mac","Linux","Android"];
-const places = ["القصر","المختبر","المتحف","البورصة"];
 
-// حالة اللعبة
+const questionsList = [
+"أين كنت وقت الجريمة؟",
+"هل تعرف الضحية؟",
+"لماذا كنت هناك؟"
+];
+
 let crime = {};
 let selected = "";
+let level = 1;
+let score = 0;
+let timer;
+let timeLeft = 0;
 
-// دالة عشوائية
 function rand(arr){
     return arr[Math.floor(Math.random()*arr.length)];
 }
 
-// إنشاء قضية جديدة
+function difficultyTime(){
+    return Math.max(20, 90 - (level * 5));
+}
+
 function generate(){
+
+    selected = "";
+
+    let killer = rand(names);
+
     crime = {
         place: rand(places),
-        killer: rand(names),
+        killer,
         evidence:{
             blood: rand(blood),
             perfume: rand(perfumes),
             device: rand(devices)
-        }
+        },
+        witness: "رأيت شخصًا يرتدي " + rand(perfumes) + " ويستخدم " + rand(devices)
     };
 
     document.getElementById("place").innerText = crime.place;
+    document.getElementById("witness").innerText = crime.witness;
 
+    // suspects
     let container = document.getElementById("suspects");
     container.innerHTML = "";
 
     names.forEach(n=>{
         let div = document.createElement("div");
-        div.className = "suspect";
-        div.innerText = n;
+        div.className="suspect";
+        div.innerText=n;
 
-        div.onclick = function(){
+        div.onclick=()=>{
             document.querySelectorAll(".suspect").forEach(s=>s.classList.remove("selected"));
             div.classList.add("selected");
-            selected = n;
-            document.getElementById("result").innerText = "تم اختيار: " + n;
+            selected=n;
         };
 
         container.appendChild(div);
     });
+
+    // questions
+    let qBox = document.getElementById("questions");
+    qBox.innerHTML = "";
+
+    questionsList.forEach(q=>{
+        let b = document.createElement("button");
+        b.innerText=q;
+        b.onclick=()=> alert(narrativeAnswer(q));
+        qBox.appendChild(b);
+    });
+
+    startTimer();
 }
 
-// عرض الأدلة
+function narrativeAnswer(q){
+    if(q.includes("أين")){
+        return rand(["كنت في العمل","كنت في المنزل","لا أذكر"]);
+    }
+    if(q.includes("تعرف")){
+        return rand(["نعم","لا","ليس جيدًا"]);
+    }
+    return rand(["كنت أمر فقط","صدفة","لا علاقة لي"]);
+}
+
 function showEvidence(){
     document.getElementById("evidence").innerText =
     `🩸 دم: ${crime.evidence.blood} | 🧪 عطر: ${crime.evidence.perfume} | 💻 جهاز: ${crime.evidence.device}`;
 }
 
-// إصدار الحكم
+function hint(){
+    alert("💡 الشاهد ذكر: " + crime.witness);
+}
+
+function startTimer(){
+    clearInterval(timer);
+    timeLeft = difficultyTime();
+
+    timer = setInterval(()=>{
+        document.getElementById("timer").innerText = "⏱ الوقت: " + timeLeft;
+        timeLeft--;
+
+        if(timeLeft < 0){
+            clearInterval(timer);
+            alert("انتهى الوقت!");
+            level = 1;
+            score = 0;
+            generate();
+        }
+    },1000);
+}
+
+function rank(){
+    if(score < 200) return "مبتدئ";
+    if(score < 500) return "محترف";
+    return "أسطوري";
+}
+
 function finalAnswer(){
+
     if(!selected){
-        alert("اختر مشتبه أولاً!");
+        alert("اختر مشتبه!");
         return;
     }
 
     if(selected === crime.killer){
-        document.getElementById("result").innerText =
-        "✔️ صحيح! أنت محقق عبقري 🧠";
-    }else{
-        document.getElementById("result").innerText =
-        "❌ خطأ! المجرم الحقيقي هو: " + crime.killer;
+        score += 100;
+        level++;
+        document.getElementById("result").innerText = "✔️ صحيح!";
+    } else {
+        score -= 50;
+        document.getElementById("result").innerText = "❌ خطأ!";
     }
+
+    document.getElementById("score").innerText = score;
+    document.getElementById("rank").innerText = rank();
+    document.getElementById("level").innerText = level;
+
+    setTimeout(generate, 1500);
 }
 
-// تشغيل اللعبة
 generate();
+
 </script>
 
 </body>
