@@ -1,144 +1,78 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لعبة التحقيق الجنائي</title>
-
-<style>
-body {
-    font-family: Arial;
-    background:#0f172a;
-    color:white;
-    text-align:center;
-    margin:0;
-}
-
-header {
-    padding:15px;
-    background:#111827;
-    font-size:20px;
-}
-
-.card {
-    background:#1f2937;
-    margin:10px auto;
-    padding:15px;
-    max-width:500px;
-    border-radius:12px;
-}
-
-button {
-    padding:10px;
-    margin:5px;
-    cursor:pointer;
-    border:none;
-    border-radius:8px;
-    background:#2563eb;
-    color:white;
-    width:90%;
-}
-
-button:hover {
-    background:#1d4ed8;
-}
-
-.result {
-    font-size:20px;
-    margin-top:10px;
-}
-</style>
-</head>
-
-<body>
-
-<header>🕵️ لعبة التحقيق الجنائي</header>
-
-<div class="card">
-<h3>📍 المكان</h3>
-<p id="place"></p>
-</div>
-
-<div class="card">
-<h3>📋 الأدلة</h3>
-<p id="evidence"></p>
-<button onclick="showEvidence()">عرض الأدلة</button>
-</div>
-
-<div class="card">
-<h3>👥 المشتبه بهم</h3>
-<div id="suspects"></div>
-</div>
-
-<div class="card">
-<button onclick="finalAnswer()">⚖️ إصدار الحكم</button>
-</div>
-
-<div class="result" id="result"></div>
-
-<script>
-const names = ["سلطان","تركي","مشاري","فيصل"];
-
-const blood = ["O+","A+","B+","AB+"];
-const perfumes = ["عود","مسك","لافندر","صندل"];
-const devices = ["Windows","Mac","Linux","Android"];
-
-let crime = {};
-let selected = "";
-
-function rand(arr){
-    return arr[Math.floor(Math.random()*arr.length)];
-}
-
-function generate(){
-    let killer = rand(names);
-
-    crime = {
-        place: rand(["القصر","المختبر","المتحف","البورصة"]),
-        killer: killer,
-        evidence: {
-            blood: rand(blood),
-            perfume: rand(perfumes),
-            device: rand(devices)
-        }
-    };
-
-    document.getElementById("place").innerText = crime.place;
-
-    const container = document.getElementById("suspects");
-    container.innerHTML = "";
-
-    names.forEach(n => {
-        const btn = document.createElement("button");
-        btn.innerText = n;
-        btn.onclick = () => selectSuspect(n);
-        container.appendChild(btn);
-    });
-}
-
-function showEvidence(){
-    document.getElementById("evidence").innerText =
-    دم: ${crime.evidence.blood} | عطر: ${crime.evidence.perfume} | جهاز: ${crime.evidence.device};
-}
-
-function selectSuspect(name){
-    selected = name;
-    document.getElementById("result").innerText = "تم اختيار: " + name;
-}
-
-function finalAnswer(){
-    if(!selected){
-        alert("اختر مشتبه أولاً!");
-        return;
+blood}</span> | العطر: <span style="color:#60a5fa">${s.perfume}</span> | المقاس: <span style="color:#fbcfe8">${s.shoes}</span> | الجهاز: <span style="color:#34d399">${s.device}</span><br>
+                    • الدافع السلوكي: <strong>${s.motive}</strong><br>
+                    • الحالة النفسية: <em style="color:#cbd5e1">${s.behavior}</em>
+                </div>
+            `;
+            card.onclick = () => selectSuspect(name);
+            container.appendChild(card);
+        });
     }
 
-    document.getElementById("result").innerText =
-    (selected === crime.killer)
-    ? "✔️ صحيح! أنت محقق عبقري 🧠"
-    : "❌ خطأ! الجاني الحقيقي: " + crime.killer;
-}
+    function toggleEvidence() {
+        const panel = document.getElementById("evidence-panel");
+        const btn = document.getElementById("btn-toggle-evidence");
+        if (panel.style.display === "none" || panel.style.display === "") {
+            panel.style.display = "block";
+            btn.innerText = "❌ إخفاء تقرير الأدلة";
+        } else {
+            panel.style.display = "none";
+            btn.innerText = "🔎 فحص المختبر الجنائي";
+        }
+    }
 
-generate();
+    function selectSuspect(name) {
+        selectedSuspectName = name;
+        // إزالة التحديد النشط من الجميع وتحديده للبطاقة الحالية
+        Object.keys(currentCase.suspects).forEach(n => {
+            document.getElementById(`suspect-${n}`).classList.remove("selected");
+        });
+        document.getElementById(`suspect-${name}`).classList.add("selected");
+    }
+
+    function submitVerdict() {
+        if (!selectedSuspectName) {
+            alert("⚠️ يرجى تحديد المشتبه به الرئيسي من القائمة أولاً قبل إصدار الحكم!");
+            return;
+        }
+
+        const resultPanel = document.getElementById("result-panel");
+        resultPanel.style.display = "block";
+
+        if (selectedSuspectName === currentCase.criminal) {
+            resultPanel.className = "result-box result-success";
+            resultPanel.innerHTML = ✔️ حكم صحيح! أنت محقق عبقري وتفوقت على ذكاء المجرم.<br><span style="font-size:0.8em;">(+100 نقطة خبرة)</span>;
+            
+            player.xp += 100;
+            player.stage += 1;
+
+            // الانتقال التلقائي للمرحلة القادمة بعد ثانيتين ونصف
+            setTimeout(startNewRound, 2500);
+        } else {
+            resultPanel.className = "result-box result-danger";
+            
+            // صياغة نص النتائج لطباعة كافة السكورات كما في البايثون
+            let scoreDetails = "";
+            Object.keys(currentCase.scores).forEach(n => {
+                scoreDetails += <br> ${n}: ${currentCase.scores[n]} نقطة اشتباه;
+            });
+
+            resultPanel.innerHTML = `❌ حكم خاطئ! لقد أدنت بريئاً.<br>
+                                     المجرم الحقيقي هو: <strong style="color:yellow">${currentCase.criminal}</strong>.<br>
+                                     <div style="font-size:0.8em; text-align:right; background:rgba(0,0,0,0.2); padding:8px; margin-top:8px; border-radius:5px;">
+                                     📊 تقرير درجات الاشتباه الكلية كان:${scoreDetails}
+                                     </div>
+                                     <button class="btn" style="margin-top:10px; background:#475569;" onclick="resetGame()">إعادة البدء من جديد</button>`;
+        }
+    }
+
+    function resetGame() {
+        player.xp = 100;
+        player.stage = 1;
+        startNewRound();
+    }
+
+    // إطلاق اللعبة عند تحميل الصفحة فوراً
+    window.onload = startNewRound;
 </script>
 
 </body>
