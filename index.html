@@ -43,10 +43,6 @@ button:hover {
     background:#1d4ed8;
 }
 
-#suspects button {
-    display:block;
-}
-
 .result {
     font-size:20px;
     margin-top:10px;
@@ -109,12 +105,15 @@ function generate(){
 
     document.getElementById("place").innerText = crime.place;
 
-    let html = "";
-    names.forEach(n=>{
-        html += <button onclick="selectSuspect('${n}')">${n}</button>;
-    });
+    const container = document.getElementById("suspects");
+    container.innerHTML = "";
 
-    document.getElementById("suspects").innerHTML = html;
+    names.forEach(n => {
+        const btn = document.createElement("button");
+        btn.innerText = n;
+        btn.onclick = () => selectSuspect(n);
+        container.appendChild(btn);
+    });
 }
 
 function showEvidence(){
@@ -128,17 +127,15 @@ function selectSuspect(name){
 }
 
 function finalAnswer(){
-    if(selected === ""){
+    if(!selected){
         alert("اختر مشتبه أولاً!");
         return;
     }
 
-    if(selected === crime.killer){
-        document.getElementById("result").innerText = "✔️ صحيح! أنت محقق عبقري 🧠";
-    } else {
-        document.getElementById("result").innerText =
-        "❌ خطأ! الجاني الحقيقي: " + crime.killer;
-    }
+    document.getElementById("result").innerText =
+    (selected === crime.killer)
+    ? "✔️ صحيح! أنت محقق عبقري 🧠"
+    : "❌ خطأ! الجاني الحقيقي: " + crime.killer;
 }
 
 generate();
