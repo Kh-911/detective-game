@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة التحقيق الجنائي</title>
+
+<style>
+body {
+    font-family: Arial;
+    background:#0f172a;
+    color:white;
+    text-align:center;
+    margin:0;
+}
+
+header {
+    padding:15px;
+    background:#111827;
+    font-size:20px;
+}
+
+.card {
+    background:#1f2937;
+    margin:10px auto;
+    padding:15px;
+    max-width:500px;
+    border-radius:12px;
+}
+
+button {
+    padding:10px;
+    margin:5px;
+    cursor:pointer;
+    border:none;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    width:90%;
+}
+
+button:hover {
+    background:#1d4ed8;
+}
+
+#suspects button {
+    display:block;
+}
+
+.result {
+    font-size:20px;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>🕵️ لعبة التحقيق الجنائي</header>
+
+<div class="card">
+<h3>📍 المكان</h3>
+<p id="place"></p>
+</div>
+
+<div class="card">
+<h3>📋 الأدلة</h3>
+<p id="evidence"></p>
+<button onclick="showEvidence()">عرض الأدلة</button>
+</div>
+
+<div class="card">
+<h3>👥 المشتبه بهم</h3>
+<div id="suspects"></div>
+</div>
+
+<div class="card">
+<button onclick="finalAnswer()">⚖️ إصدار الحكم</button>
+</div>
+
+<div class="result" id="result"></div>
+
+<script>
+const names = ["سلطان","تركي","مشاري","فيصل"];
+
+const blood = ["O+","A+","B+","AB+"];
+const perfumes = ["عود","مسك","لافندر","صندل"];
+const devices = ["Windows","Mac","Linux","Android"];
+
+let crime = {};
+let selected = "";
+
+function rand(arr){
+    return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function generate(){
+    let killer = rand(names);
+
+    crime = {
+        place: rand(["القصر","المختبر","المتحف","البورصة"]),
+        killer: killer,
+        evidence: {
+            blood: rand(blood),
+            perfume: rand(perfumes),
+            device: rand(devices)
+        }
+    };
+
+    document.getElementById("place").innerText = crime.place;
+
+    let html = "";
+    names.forEach(n=>{
+        html += <button onclick="selectSuspect('${n}')">${n}</button>;
+    });
+
+    document.getElementById("suspects").innerHTML = html;
+}
+
+function showEvidence(){
+    document.getElementById("evidence").innerText =
+    دم: ${crime.evidence.blood} | عطر: ${crime.evidence.perfume} | جهاز: ${crime.evidence.device};
+}
+
+function selectSuspect(name){
+    selected = name;
+    document.getElementById("result").innerText = "تم اختيار: " + name;
+}
+
+function finalAnswer(){
+    if(selected === ""){
+        alert("اختر مشتبه أولاً!");
+        return;
+    }
+
+    if(selected === crime.killer){
+        document.getElementById("result").innerText = "✔️ صحيح! أنت محقق عبقري 🧠";
+    } else {
+        document.getElementById("result").innerText =
+        "❌ خطأ! الجاني الحقيقي: " + crime.killer;
+    }
+}
+
+generate();
+</script>
+
+</body>
+</html>
